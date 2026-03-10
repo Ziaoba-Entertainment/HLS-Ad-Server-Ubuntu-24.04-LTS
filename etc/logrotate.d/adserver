@@ -1,0 +1,12 @@
+/var/log/adserver/*.log {
+    daily
+    rotate 30
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+    postrotate
+        /usr/bin/redis-cli PUBLISH adserver:events "logs_rotated" || true
+    endscript
+}

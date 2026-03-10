@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Live Activity{% endblock %}
+
+{% block extra_style %}
+<style>
+    .row-pre { border-left: 4px solid var(--success); }
+    .row-mid { border-left: 4px solid var(--info); }
+    .row-post { border-left: 4px solid var(--warning); }
+    
+    .badge {
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    .badge-pre { background-color: var(--success); color: white; }
+    .badge-mid { background-color: var(--info); color: white; }
+    .badge-post { background-color: var(--warning); color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>Live Activity</h2>
+        <div id="refresh-status" style="font-size: 0.8rem; color: var(--text-muted);">Updating in <span id="countdown">10</span>s</div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Ad Folder</th>
+                <th>Content Path</th>
+                <th>Placement</th>
+                <th>Session ID</th>
+            </tr>
+        </thead>
+        <tbody id="activity-body">
+            {% for imp in impressions %}
+            <tr class="row-{{ imp.placement }}">
+                <td>{{ imp.played_at }}</td>
+                <td>{{ imp.folder_name }}</td>
+                <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ imp.content_path }}</td>
+                <td><span class="badge badge-{{ imp.placement }}">{{ imp.placement }}</span></td>
+                <td style="font-family: monospace; font-size: 0.8rem;">{{ imp.session_id }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let countdown = 10;
+    const countdownEl = document.getElementById('countdown');
+    
+    async function refreshActivity() {
+        try {
+            const res = await fetch('/api/impressions/recent');
+            const data = await res.json();
+            
+            const tbody = document.getElementById('activity-body');
+            tbody.innerHTML = data.map(imp => `
+                <tr class="row-${imp.placement}">
+                    <td>${imp.played_at}</td>
+                    <td>${imp.folder_name}</td>
+                    <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${imp.content_path}</td>
+                    <td><span class="badge badge-${imp.placement}">${imp.placement}</span></td>
+                    <td style="font-family: monospace; font-size: 0.8rem;">${imp.session_id}</td>
+                </tr>
+            `).join('');
+            
+            countdown = 10;
+        } catch (e) {
+            console.error("Refresh failed", e);
+        }
+    }
+
+    setInterval(() => {
+        countdown--;
+        if (countdown <= 0) {
+            refreshActivity();
+        }
+        countdownEl.innerText = countdown;
+    }, 1000);
+</script>
+{% endblock %}

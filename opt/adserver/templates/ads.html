@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Ads Management{% endblock %}
+
+{% block extra_style %}
+<style>
+    .priority-bar {
+        display: flex;
+        gap: 2px;
+        height: 12px;
+        align-items: flex-end;
+    }
+    .bar {
+        width: 6px;
+        background-color: var(--accent);
+        border-radius: 1px;
+    }
+    .bar.active {
+        background-color: var(--highlight);
+    }
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 20px;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: var(--accent);
+        transition: .4s;
+        border-radius: 20px;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 14px; width: 14px;
+        left: 3px; bottom: 3px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    input:checked + .slider { background-color: var(--highlight); }
+    input:checked + .slider:before { transform: translateX(20px); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>Ads Management</h2>
+        <button onclick="scanFilesystem()" class="btn btn-primary">Scan Filesystem</button>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Folder Name</th>
+                <th>Priority</th>
+                <th>Pre</th>
+                <th>Mid</th>
+                <th>Post</th>
+                <th>Active</th>
+                <th>Plays</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ad in ads %}
+            <tr id="ad-row-{{ ad.id }}">
+                <td>{{ ad.id }}</td>
+                <td>{{ ad.folder_name }}</td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <select onchange="updateAd({{ ad.id }}, {priority: parseInt(this.value)})">
+                            {% for i in range(1, 6) %}
+                            <option value="{{ i }}" {% if ad.priority == i %}selected{% endif %}>{{ i }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="priority-bar">
+                            {% for i in range(1, 6) %}
+                            <div class="bar {% if i <= (6 - ad.priority) %}active{% endif %}" style="height: {{ i * 4 }}px;"></div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </td>
+                <td><input type="checkbox" {% if ad.placement_pre %}checked{% endif %} onchange="updateAd({{ ad.id }}, {placement_pre: this.checked ? 1 : 0})"></td>
+                <td><input type="checkbox" {% if ad.placement_mid %}checked{% endif %} onchange="updateAd({{ ad.id }}, {placement_mid: this.checked ? 1 : 0})"></td>
+                <td><input type="checkbox" {% if ad.placement_post %}checked{% endif %} onchange="updateAd({{ ad.id }}, {placement_post: this.checked ? 1 : 0})"></td>
+                <td>
+                    <label class="toggle-switch">
+                        <input type="checkbox" {% if ad.active %}checked{% endif %} onchange="updateAd({{ ad.id }}, {active: this.checked ? 1 : 0})">
+                        <span class="slider"></span>
+                    </label>
+                </td>
+                <td>{{ ad.play_count }}</td>
+                <td>
+                    <button onclick="confirmDelete({{ ad.id }})" class="btn btn-danger btn-sm">Delete</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function scanFilesystem() {
+        const btn = event.target;
+        btn.disabled = true;
+        btn.innerText = "Scanning...";
+        try {
+            const res = await fetch('/api/ads/scan', { method: 'POST' });
+            const data = await res.json();
+            alert(data.message);
+            location.reload();
+        } catch (e) {
+            alert("Scan failed");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Scan Filesystem";
+        }
+    }
+
+    async function updateAd(id, data) {
+        try {
+            await fetch(`/api/ads/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            // Optional: visual feedback
+        } catch (e) {
+            alert("Update failed");
+        }
+    }
+
+    let adToDelete = null;
+    function confirmDelete(id) {
+        adToDelete = id;
+        document.getElementById('confirmModal').style.display = 'flex';
+    }
+
+    document.getElementById('confirmDeleteBtn').onclick = async () => {
+        if (!adToDelete) return;
+        try {
+            await fetch(`/api/ads/${adToDelete}`, { method: 'DELETE' });
+            document.getElementById(`ad-row-${adToDelete}`).remove();
+            closeModal();
+        } catch (e) {
+            alert("Delete failed");
+        }
+    };
+</script>
+{% endblock %}

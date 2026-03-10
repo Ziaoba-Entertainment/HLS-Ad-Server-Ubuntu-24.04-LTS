@@ -1,0 +1,19 @@
+[Unit]
+Description=Ad Server Folder Watcher Daemon
+After=network.target redis.service adserver.service
+Wants=redis.service
+
+[Service]
+User=media
+Group=media
+WorkingDirectory=/opt/adserver
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/adserver/venv/bin/python3 /opt/adserver/watch_ads.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ad-watcher
+
+[Install]
+WantedBy=multi-user.target

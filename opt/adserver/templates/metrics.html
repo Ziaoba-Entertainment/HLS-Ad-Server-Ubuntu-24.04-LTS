@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<style>
+    :root {
+        --bg-color: #1a1a2e;
+        --card-bg: #16213e;
+        --accent: #0f3460;
+        --highlight: #e94560;
+        --text-color: #e0e0e0;
+        --pre-color: #2ecc71;
+        --mid-color: #3498db;
+        --post-color: #e67e22;
+    }
+    body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    .card {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    .header {
+        margin-bottom: 30px;
+    }
+    .header h1 {
+        color: var(--highlight);
+        margin-bottom: 5px;
+    }
+    .date-form {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+    .date-form input, .date-form button {
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: 1px solid var(--accent);
+        background: #1a1a2e;
+        color: white;
+    }
+    .date-form button {
+        background: var(--highlight);
+        border: none;
+        cursor: pointer;
+    }
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    .summary-card {
+        text-align: center;
+        padding: 15px;
+    }
+    .summary-card .val {
+        font-size: 24px;
+        font-weight: bold;
+        display: block;
+    }
+    .summary-card .lbl {
+        font-size: 12px;
+        text-transform: uppercase;
+        opacity: 0.7;
+    }
+    .chart-container {
+        margin-bottom: 40px;
+    }
+    .chart-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    .chart-label {
+        width: 150px;
+        font-size: 14px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .chart-bar-wrapper {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .chart-bar {
+        height: 24px;
+        background: #0f3460;
+        border-radius: 4px;
+        overflow: hidden;
+        display: flex;
+        flex-grow: 1;
+    }
+    .bar-pre { background-color: var(--pre-color); height: 100%; }
+    .bar-mid { background-color: var(--mid-color); height: 100%; }
+    .bar-post { background-color: var(--post-color); height: 100%; }
+    .chart-count {
+        width: 60px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+    .legend {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        margin-top: 10px;
+        font-size: 12px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
+    .dot { width: 12px; height: 12px; border-radius: 2px; }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    th, td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #0f3460;
+    }
+    th {
+        background-color: var(--accent);
+        text-transform: uppercase;
+        font-size: 12px;
+    }
+    tr:nth-child(even) { background-color: rgba(255,255,255,0.02); }
+    
+    .btn-export {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 10px 20px;
+        background: var(--accent);
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+    .btn-export:hover { background: var(--highlight); }
+    .auto-refresh-note {
+        font-size: 11px;
+        opacity: 0.5;
+        margin-left: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>Advertising Metrics</h1>
+    <p>Impressions report for billing and performance analysis</p>
+</div>
+
+<form class="date-form" method="GET" action="/metrics">
+    <label>Period:</label>
+    <input type="date" name="start" value="{{ date_start }}">
+    <span>to</span>
+    <input type="date" name="end" value="{{ date_end }}">
+    <button type="submit">Apply Range</button>
+</form>
+
+<div class="summary-grid">
+    <div class="card summary-card">
+        <span class="val">{{ total_impressions }}</span>
+        <span class="lbl">Total Impressions</span>
+    </div>
+    <div class="card summary-card" style="border-bottom: 3px solid var(--pre-color)">
+        <span class="val">{{ pre_total }}</span>
+        <span class="lbl">Pre-roll ({{ pre_pct }}%)</span>
+    </div>
+    <div class="card summary-card" style="border-bottom: 3px solid var(--mid-color)">
+        <span class="val">{{ mid_total }}</span>
+        <span class="lbl">Mid-roll ({{ mid_pct }}%)</span>
+    </div>
+    <div class="card summary-card" style="border-bottom: 3px solid var(--post-color)">
+        <span class="val">{{ post_total }}</span>
+        <span class="lbl">Post-roll ({{ post_pct }}%)</span>
+    </div>
+    <div class="card summary-card" style="border-bottom: 3px solid var(--highlight)">
+        <span class="val">{{ top_ad }}</span>
+        <span class="lbl">Top Performer</span>
+    </div>
+</div>
+
+<div class="card chart-container">
+    <h3>Distribution by Ad Folder</h3>
+    {% if ad_rows %}
+        {% for row in ad_rows %}
+        <div class="chart-row">
+            <div class="chart-label" title="{{ row.folder_name }}">{{ row.folder_name }}</div>
+            <div class="chart-bar-wrapper">
+                <div class="chart-bar">
+                    <div class="bar-pre" 
+                         style="width: {{ ((row.pre / max_total) * 100) | round(1) }}%" 
+                         title="Pre-roll: {{ row.pre }}"></div>
+                    <div class="bar-mid" 
+                         style="width: {{ ((row.mid / max_total) * 100) | round(1) }}%" 
+                         title="Mid-roll: {{ row.mid }}"></div>
+                    <div class="bar-post" 
+                         style="width: {{ ((row.post / max_total) * 100) | round(1) }}%" 
+                         title="Post-roll: {{ row.post }}"></div>
+                </div>
+                <span class="chart-count">{{ row.total }}</span>
+            </div>
+        </div>
+        {% endfor %}
+        <div class="legend">
+            <div class="legend-item"><div class="dot bar-pre"></div> Pre-roll</div>
+            <div class="legend-item"><div class="dot bar-mid"></div> Mid-roll</div>
+            <div class="legend-item"><div class="dot bar-post"></div> Post-roll</div>
+        </div>
+    {% else %}
+        <p style="text-align:center; padding: 40px; opacity: 0.5;">No impressions recorded for this period.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>Detailed Breakdown</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Ad Folder</th>
+                <th>Pre-roll</th>
+                <th>Mid-roll</th>
+                <th>Post-roll</th>
+                <th>Total</th>
+                <th>Share %</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% if ad_rows %}
+            {% for row in ad_rows %}
+            <tr>
+                <td>{{ row.folder_name }}</td>
+                <td>{{ row.pre }}</td>
+                <td>{{ row.mid }}</td>
+                <td>{{ row.post }}</td>
+                <td><strong>{{ row.total }}</strong></td>
+                <td>
+                    {% if total_impressions > 0 %}
+                        {{ ((row.total / total_impressions) * 100) | round(1) }}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr><td colspan="6" style="text-align:center; padding: 20px;">No data for selected period</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<div style="display: flex; align-items: center;">
+    <a href="/api/metrics/export?start={{ date_start }}&end={{ date_end }}" class="btn-export">
+        ⬇ Export CSV
+    </a>
+    <span class="auto-refresh-note">Auto-refreshes every 60s</span>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Auto-refresh every 60 seconds
+    setTimeout(function() {
+        location.reload();
+    }, 60000);
+</script>
+{% endblock %}
