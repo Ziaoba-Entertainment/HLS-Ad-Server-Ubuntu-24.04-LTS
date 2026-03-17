@@ -10,8 +10,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("adserver.events")
 
 # CONFIG
-REDIS_PASS = "TranscoderRedis2024!"
+REDIS_PASS = settings.REDIS_PASSWORD
 REDIS_DB = 0  # Transcoder events are on DB 0 as per spec
+REDIS_HOST = settings.REDIS_HOST
+REDIS_PORT = settings.REDIS_PORT
 CHANNEL = "transcoder:events"
 DB_PATH = settings.DB_PATH
 
@@ -105,7 +107,7 @@ def handle_event(event_data):
         elif event_type == "encoding_profile_updated":
             # Logic to revalidate ad profiles
             logger.info("Encoding profiles updated, clearing manifest cache")
-            r_ad = redis.Redis(host="127.0.0.1", port=6379, db=1, password=REDIS_PASS)
+            r_ad = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=1, password=REDIS_PASS)
             keys = r_ad.keys("ad:manifest_cache:*")
             if keys:
                 r_ad.delete(*keys)
@@ -121,7 +123,7 @@ def handle_event(event_data):
 
 def main():
     try:
-        r = redis.Redis(host="127.0.0.1", port=6379, db=REDIS_DB, 
+        r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, 
                         password=REDIS_PASS, decode_responses=True)
         pubsub = r.pubsub()
         pubsub.subscribe(CHANNEL)

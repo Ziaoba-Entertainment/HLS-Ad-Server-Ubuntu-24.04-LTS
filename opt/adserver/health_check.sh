@@ -48,15 +48,22 @@ check_service "nginx" || FAILED=1
 check_service "redis-server" || FAILED=1
 
 # Ports
-check_port "8081" || FAILED=1 # HLS Delivery
-check_port "88" || FAILED=1   # Admin UI (returns 401 due to auth)
+check_port "8083" || FAILED=1 # Ad Stitcher
+check_port "8089" || FAILED=1 # Admin UI
 
 # API Health
-check_api_health "http://127.0.0.1:8082/api/health" "Ad Injection" || FAILED=1
-check_api_health "http://127.0.0.1:8089/api/health" "Admin UI" || FAILED=1
+check_api_health "http://127.0.0.1:8083/health" "Ad Stitcher" || FAILED=1
+check_api_health "http://127.0.0.1:8089/health" "Admin UI" || FAILED=1
 
 # Redis
-if redis-cli ping | grep "PONG" > /dev/null; then
+REDIS_PING_CMD="redis-cli"
+if [[ -f "/etc/ziaoba/redis.env" ]]; then
+    source "/etc/ziaoba/redis.env"
+    export REDISCLI_AUTH="$REDIS_PASSWORD"
+    REDIS_PING_CMD="redis-cli -h $REDIS_HOST -p $REDIS_PORT"
+fi
+
+if $REDIS_PING_CMD ping | grep "PONG" > /dev/null; then
     echo -e "${GREEN}✓ Redis is responding to PING${NC}"
 else
     echo -e "${RED}✗ Redis PING failed${NC}"

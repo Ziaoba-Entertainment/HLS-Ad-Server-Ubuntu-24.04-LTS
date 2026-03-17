@@ -8,7 +8,8 @@ User=media
 Group=media
 WorkingDirectory=/opt/adserver
 Environment="PATH=/opt/adserver/venv/bin"
-ExecStart=/opt/adserver/venv/bin/python3 -m uvicorn admin_app:app --host 127.0.0.1 --port 8089 --workers 1
+EnvironmentFile=/opt/adserver/.env
+ExecStart=/opt/adserver/venv/bin/python3 -m uvicorn admin_app:app --host ${AD_ADMIN_HOST} --port ${AD_ADMIN_PORT} --workers 1
 Restart=always
 RestartSec=10
 

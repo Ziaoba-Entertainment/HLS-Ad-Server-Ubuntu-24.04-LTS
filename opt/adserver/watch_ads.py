@@ -6,6 +6,7 @@ import json
 import redis
 import signal
 import subprocess
+from config import settings
 from ad_selector import AdSelector
 from verify_ad_segments import AdVerifier
 
@@ -15,10 +16,10 @@ ADS_DIR = "/srv/vod/ads"
 REJECTED_DIR = "/srv/vod/ads/rejected"
 LOG_FILE = "/var/log/adserver/watch_ads.log"
 REDIS_CHANNEL = "ad:ad_registered_events"
-REDIS_PASS = "TranscoderRedis2024!"
+REDIS_PASS = settings.REDIS_PASSWORD
 
 # Redis initialization for DB 1 (Ad Metadata)
-redis_client = redis.Redis(host='localhost', port=6379, db=1, password=REDIS_PASS, decode_responses=True)
+redis_client = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB, password=REDIS_PASS, decode_responses=True)
 selector = AdSelector(redis_client=redis_client)
 verifier = AdVerifier(verbose=False)
 

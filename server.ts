@@ -48,10 +48,11 @@ async function startServer() {
     log(`Diagnostics failed: ${err}`);
   }
 
+  const adserverDir = path.resolve("opt/adserver");
+
   // Try to install requirements directly
   try {
     log("Installing requirements directly...");
-    const adserverDir = path.resolve("opt/adserver");
     const requirementsPath = path.join(adserverDir, "requirements.txt");
     execSync(`python3 -m pip install --user -r ${requirementsPath}`);
     log("Requirements installed successfully");
@@ -99,34 +100,57 @@ except:
     log(`Redis binary discovery failed: ${err}`);
   }
 
+  // Load Redis credentials
+  let redisPassword = "";
+  const redisEnvPath = "/etc/ziaoba/redis.env";
+  if (fs.existsSync(redisEnvPath)) {
+    log(`Loading Redis credentials from ${redisEnvPath}`);
+    const redisEnv = fs.readFileSync(redisEnvPath, "utf-8");
+    const passwordMatch = redisEnv.match(/REDIS_PASSWORD=(.*)/);
+    if (passwordMatch) {
+      redisPassword = passwordMatch[1].trim();
+      log("Redis password loaded from config");
+    }
+  }
+
   // Try to start redis
   try {
     log(`Starting redis-server using bin: ${redisBin}`);
-    const redisServer = new RedisServer({
-      port: 6379,
-      bin: redisBin,
-    });
+    
+    // Create a temporary redis config to support password
+    const redisConfPath = path.join(adserverDir, "redis.conf");
+    let redisConf = `port 6379\nbind 127.0.0.1\n`;
+    if (redisPassword) {
+      redisConf += `requirepass ${redisPassword}\n`;
+    }
+    fs.writeFileSync(redisConfPath, redisConf);
 
-    redisServer.on('error', (err: any) => {
-      log(`redis-server error event: ${err.message}`);
-    });
+    log(`Starting redis-server with config: ${redisConfPath}`);
+    const redisProcess = spawn(redisBin, [redisConfPath]);
 
-    redisServer.open((err) => {
-      if (err) {
-        log(`redis-server open error: ${err.message}`);
-      } else {
-        log("redis-server started successfully on port 6379");
-      }
-    });
-
-    redisServer.on('stdout', (data) => {
+    redisProcess.stdout.on('data', (data) => {
       log(`redis stdout: ${data}`);
     });
+
+    redisProcess.stderr.on('data', (data) => {
+      log(`redis stderr: ${data}`);
+    });
+
+    redisProcess.on('error', (err) => {
+      log(`redis-server spawn error: ${err.message}`);
+    });
+
+    redisProcess.on('close', (code) => {
+      log(`redis-server process exited with code ${code}`);
+    });
+
+    // Give it a moment to start
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    log("redis-server should be running now");
   } catch (err) {
     log(`redis-server initialization failed: ${err}`);
   }
 
-  const adserverDir = path.resolve("opt/adserver");
   const srvDir = path.resolve("srv/vod");
   
   // Create directories

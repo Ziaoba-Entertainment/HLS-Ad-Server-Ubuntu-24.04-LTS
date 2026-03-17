@@ -9,7 +9,8 @@ class Settings(BaseSettings):
     # Ad Server Components
     FASTAPI_PORT: int = 8083
     FASTAPI_HOST: str = "127.0.0.1"
-    ADSERVER_UI_PORT: int = 8082
+    AD_ADMIN_PORT: int = 8089
+    AD_ADMIN_HOST: str = "127.0.0.1"
     INTERNAL_FASTAPI_URL: str = "http://127.0.0.1:8083"
 
     # Transcoder Components
@@ -41,9 +42,11 @@ class Settings(BaseSettings):
         return os.path.abspath(os.path.join(self.BASE_DIR, "../../srv/vod/hls"))
     
     # Redis
+    REDIS_HOST: str = "127.0.0.1"
+    REDIS_PORT: int = 6379
     REDIS_DB: int = 1
     REDIS_PREFIX: str = "ad:"
-    REDIS_PASS: str = ""
+    REDIS_PASSWORD: str = ""
 
     # Logic
     MID_ROLL_INTERVAL: int = 600
@@ -51,7 +54,7 @@ class Settings(BaseSettings):
     SEGMENT_DURATION: int = 6
 
     class Config:
-        env_file = ".env"
+        env_file = [".env", "/etc/ziaoba/redis.env"]
         extra = "allow"
 
 settings = Settings()

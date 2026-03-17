@@ -97,8 +97,8 @@ def test_playlist_builder():
 def test_api_health():
     print("[*] Testing FastAPI health endpoints...")
     try:
-        r1 = requests.get("http://127.0.0.1:8082/api/health", timeout=2)
-        r2 = requests.get("http://127.0.0.1:8089/api/health", timeout=2)
+        r1 = requests.get("http://127.0.0.1:8083/health", timeout=2)
+        r2 = requests.get("http://127.0.0.1:8089/health", timeout=2)
         if r1.status_code == 200 and r2.status_code == 200:
             print("[PASS] Both APIs are healthy.")
             return True
@@ -111,8 +111,10 @@ def test_api_health():
 
 def test_redis():
     print("[*] Testing Redis connection...")
+    from config import settings
     try:
-        r = redis.Redis(host='localhost', port=6379)
+        r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, 
+                        db=settings.REDIS_DB, password=settings.REDIS_PASSWORD)
         if r.ping():
             print("[PASS] Redis is connected.")
             return True

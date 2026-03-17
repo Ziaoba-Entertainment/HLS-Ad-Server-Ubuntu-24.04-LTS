@@ -28,9 +28,11 @@ LOG_PATH          = os.path.join(BASE_DIR, "adserver.log")
 BIND_HOST         = settings.FASTAPI_HOST
 BIND_PORT         = settings.FASTAPI_PORT
 MID_ROLL_INTERVAL = settings.MID_ROLL_INTERVAL
-REDIS_PASS        = settings.REDIS_PASS
+REDIS_PASS        = settings.REDIS_PASSWORD
 REDIS_DB          = settings.REDIS_DB
 REDIS_PREFIX      = settings.REDIS_PREFIX
+REDIS_HOST        = settings.REDIS_HOST
+REDIS_PORT        = settings.REDIS_PORT
 TRANSCODER_API    = settings.TRANSCODER_API_URL
 
 # LOGGING
@@ -53,7 +55,7 @@ ad_selector = None
 redis_client = None
 if redis_lib:
     try:
-        _r = redis_lib.Redis(host="127.0.0.1", port=6379, db=REDIS_DB,
+        _r = redis_lib.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB,
                               password=REDIS_PASS,
                               decode_responses=True, socket_timeout=2)
         _r.ping()

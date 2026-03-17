@@ -102,8 +102,8 @@ def get_db() -> sqlite3.Connection:
 from ad_selector import AdSelector
 try:
     import redis
-    redis_client = redis.Redis(host="127.0.0.1", port=6379, db=settings.REDIS_DB, 
-                               password=settings.REDIS_PASS, 
+    redis_client = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB, 
+                               password=settings.REDIS_PASSWORD, 
                                decode_responses=True, socket_timeout=2)
     redis_client.ping()
     logger.info(f"Admin connected to Redis DB {settings.REDIS_DB}")
@@ -901,7 +901,7 @@ def _get_system_health() -> dict:
     
     try:
         import redis
-        r = redis.Redis(host="127.0.0.1", port=6379, db=settings.REDIS_DB, password=settings.REDIS_PASS, socket_timeout=1)
+        r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB, password=settings.REDIS_PASSWORD, socket_timeout=1)
         health["redis_status"] = "online" if r.ping() else "error"
     except: health["redis_status"] = "offline"
     
@@ -934,5 +934,5 @@ def _scan_ad_folders() -> dict:
 
 if __name__ == "__main__":
     import uvicorn
-    # Port 8089 is proxied by Nginx on port 8082 for local access
-    uvicorn.run(app, host="127.0.0.1", port=8089, log_level="info")
+    # Admin interface is now bound to internal port 8089 only
+    uvicorn.run(app, host=settings.AD_ADMIN_HOST, port=settings.AD_ADMIN_PORT, log_level="info")

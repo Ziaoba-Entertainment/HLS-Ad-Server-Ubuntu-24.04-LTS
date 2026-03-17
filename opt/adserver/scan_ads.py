@@ -11,9 +11,10 @@ def main():
     args = parser.parse_args()
 
     ads_dir = "/srv/vod/ads"
+    from config import settings
     import redis
     try:
-        redis_client = redis.Redis(host='localhost', port=6379, db=1, password="TranscoderRedis2024!", decode_responses=True)
+        redis_client = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB, password=settings.REDIS_PASSWORD, decode_responses=True)
         redis_client.ping()
     except:
         redis_client = None

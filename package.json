@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "check-redis": "python3 opt/adserver/check_redis_health.py"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

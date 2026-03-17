@@ -75,6 +75,7 @@ usage() {
     echo "  status     Check health and service status"
     echo "  audit      Run security audit (Option 14)"
     echo "  logs       View combined application logs"
+    echo "  enable-network  Enable local network access to Admin UI"
     echo "  help       Show this help message"
     echo ""
 }
@@ -169,6 +170,7 @@ FILES_TO_COPY=(
     "rotate_logs.sh"
     "test_injection.py"
     "config.py"
+    "enable_network_admin.sh"
     "adserver.service"
     "adserver-admin.service"
     "ad-watcher.service"
@@ -235,6 +237,14 @@ deploy_files() {
     fi
     
     chown -R media:media "$INSTALL_DIR"
+    chmod -R 750 "$INSTALL_DIR"
+
+    # Deploy Nginx reference files if present in source
+    if [[ -d "$SCRIPT_DIR/../../etc/nginx" ]]; then
+        mkdir -p "$INSTALL_DIR/nginx_reference"
+        cp -r "$SCRIPT_DIR/../../etc/nginx/"* "$INSTALL_DIR/nginx_reference/"
+        echo "Deployed Nginx reference files to $INSTALL_DIR/nginx_reference"
+    fi
 }
 
 setup_venv() {
@@ -285,6 +295,17 @@ setup_systemd() {
         fi
     done
 
+    # Block external access to Admin UI port by default
+    # But allow if explicitly configured for network access
+    if command -v ufw > /dev/null; then
+        if grep "AD_ADMIN_HOST=0.0.0.0" "$INSTALL_DIR/.env" >/dev/null 2>&1; then
+            echo "${GREEN}[OK] Network access detected. Allowing port 8089 from local network.${RESET}"
+            ufw allow from 192.168.0.0/24 to any port 8089 >/dev/null 2>&1 || true
+        else
+            check_cmd "Blocking external access to port 8089" ufw deny 8089
+        fi
+    fi
+
     check_cmd "Reloading systemd" systemctl daemon-reload
     for svc in adserver adserver-admin ad-redis-listener ad-watcher; do
         check_cmd "Enabling $svc" systemctl enable "$svc"
@@ -310,24 +331,40 @@ verify_cloudflare() {
 
 check_8080_migration() {
     section "Checking for Port 8080 (qBittorrent) Conflicts"
-    if grep -r "8080" "$INSTALL_DIR" --exclude="install.sh" --exclude-dir="venv" 2>/dev/null; then
-        echo "${RED}WARNING: Port 8080 references found in project files!${RESET}"
-        echo "Port 8080 is reserved for qBittorrent. Ad Server UI must use 8082."
-        grep -r "8080" "$INSTALL_DIR" --exclude="install.sh" --exclude-dir="venv" 2>/dev/null
-    else
-        echo "${GREEN}[OK] No 8080 conflicts found.${RESET}"
+    # Only warn if Ad Server components are explicitly configured to use 8080
+    # We check .env for FASTAPI_PORT or AD_ADMIN_PORT being 8080
+    local env_file="$INSTALL_DIR/.env"
+    if [[ -f "$env_file" ]]; then
+        if grep -E "^(FASTAPI_PORT|AD_ADMIN_PORT)=8080" "$env_file" >/dev/null; then
+            echo "${RED}CRITICAL: Ad Server is configured to use Port 8080!${RESET}"
+            echo "Port 8080 is reserved for qBittorrent. Please update .env to use 8083/8089."
+            grep -E "^(FASTAPI_PORT|AD_ADMIN_PORT)=8080" "$env_file"
+        else
+            echo "${GREEN}[OK] Ad Server ports are correctly configured (not using 8080).${RESET}"
+        fi
+    fi
+
+    # Also check for any other suspicious 8080 references in python files
+    if grep -r "8080" "$INSTALL_DIR" --include="*.py" --exclude="config.py" --exclude-dir="venv" 2>/dev/null; then
+        echo "${YELLOW}Note: Found 8080 references in Python files (likely for qBittorrent proxying).${RESET}"
+        grep -r "8080" "$INSTALL_DIR" --include="*.py" --exclude="config.py" --exclude-dir="venv" 2>/dev/null | head -n 5
     fi
 }
 
 show_summary() {
     IP_ADDR=$(hostname -I | awk '{print $1}')
+    ADMIN_URL="http://localhost:8089 (SSH Tunnel Required)"
+    if grep "AD_ADMIN_HOST=0.0.0.0" "$INSTALL_DIR/.env" >/dev/null 2>&1; then
+        ADMIN_URL="http://$IP_ADDR:8089"
+    fi
+
     echo -e "\n${BOLD}${GREEN}####################################################"
     echo "#            INSTALLATION COMPLETE!                #"
     echo "####################################################${RESET}"
     echo ""
     echo "Public HLS Streaming: https://$DOMAIN/playlist/"
     echo "Transcoder Web UI:    http://$IP_ADDR:8081"
-    echo "Ad Server Web UI:     http://$IP_ADDR:8082"
+    echo "Ad Server Admin UI: $ADMIN_URL"
     echo "qBittorrent:          http://$IP_ADDR:8080"
     echo "Radarr:               http://$IP_ADDR:7878"
     echo "Sonarr:               http://$IP_ADDR:8989"
@@ -367,6 +404,16 @@ run_update() {
     echo "${GREEN}${BOLD}Update Complete!${RESET}"
 }
 
+run_enable_network() {
+    print_banner
+    if [[ -f "$INSTALL_DIR/enable_network_admin.sh" ]]; then
+        bash "$INSTALL_DIR/enable_network_admin.sh"
+    else
+        echo "${RED}Error: enable_network_admin.sh not found in $INSTALL_DIR${RESET}"
+        exit 1
+    fi
+}
+
 # --- Entry Point ---
 if [[ $# -eq 0 ]]; then
     usage
@@ -381,6 +428,7 @@ fi
 case "$1" in
     install) run_install ;;
     update)  run_update ;;
+    enable-network) run_enable_network ;;
     repair)  setup_systemd ;;
     status)  systemctl status adserver adserver-admin ad-redis-listener ad-watcher ;;
     logs)    journalctl -f -u adserver -u adserver-admin -u ad-redis-listener -u ad-watcher ;;
