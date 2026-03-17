@@ -1,0 +1,15 @@
+[Unit]
+Description=HLS Ad Folder Watcher
+After=network.target
+
+[Service]
+User=media
+Group=media
+WorkingDirectory=/opt/adserver
+Environment="PATH=/opt/adserver/venv/bin"
+ExecStart=/opt/adserver/venv/bin/python3 /opt/adserver/watch_ads.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

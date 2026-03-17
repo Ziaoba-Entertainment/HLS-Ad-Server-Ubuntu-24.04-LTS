@@ -1,0 +1,15 @@
+[Unit]
+Description=HLS Ad Server Redis Event Listener
+After=network.target redis-server.service
+
+[Service]
+User=media
+Group=media
+WorkingDirectory=/opt/adserver
+Environment="PATH=/opt/adserver/venv/bin"
+ExecStart=/opt/adserver/venv/bin/python3 /opt/adserver/redis_listener.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

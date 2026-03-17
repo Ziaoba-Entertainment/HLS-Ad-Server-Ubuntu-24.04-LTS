@@ -1,6 +1,7 @@
 [Unit]
-Description=AdServer Admin Web Interface
+Description=HLS Ad Server Admin WebUI
 After=network.target adserver.service
+StartLimitIntervalSec=0
 
 [Service]
 User=media
@@ -9,9 +10,7 @@ WorkingDirectory=/opt/adserver
 Environment="PATH=/opt/adserver/venv/bin"
 ExecStart=/opt/adserver/venv/bin/python3 -m uvicorn admin_app:app --host 127.0.0.1 --port 8089 --workers 1
 Restart=always
-RestartSec=5
-StandardOutput=journal
-StandardError=journal
+RestartSec=10
 
 [Install]
 WantedBy=multi-user.target

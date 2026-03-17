@@ -1,0 +1,15 @@
+[Unit]
+Description=ZiaOba Ad Stitching FastAPI Middleware
+After=network.target redis-server.service transcoder-router.service transcoder-worker.service
+
+[Service]
+User=media
+Group=media
+WorkingDirectory=/opt/adserver
+Environment="PATH=/opt/adserver/venv/bin"
+ExecStart=/opt/adserver/venv/bin/python3 -m uvicorn main:app --host 127.0.0.1 --port 8083 --workers 2
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

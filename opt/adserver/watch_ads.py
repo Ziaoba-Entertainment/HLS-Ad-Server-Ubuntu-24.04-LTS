@@ -14,11 +14,13 @@ INCOMING_DIR = "/srv/vod/ads/incoming"
 ADS_DIR = "/srv/vod/ads"
 REJECTED_DIR = "/srv/vod/ads/rejected"
 LOG_FILE = "/var/log/adserver/watch_ads.log"
-REDIS_CHANNEL = "ad_registered_events"
+REDIS_CHANNEL = "ad:ad_registered_events"
+REDIS_PASS = "TranscoderRedis2024!"
 
-selector = AdSelector()
+# Redis initialization for DB 1 (Ad Metadata)
+redis_client = redis.Redis(host='localhost', port=6379, db=1, password=REDIS_PASS, decode_responses=True)
+selector = AdSelector(redis_client=redis_client)
 verifier = AdVerifier(verbose=False)
-redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
 def log(message):
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")

@@ -11,7 +11,14 @@ def main():
     args = parser.parse_args()
 
     ads_dir = "/srv/vod/ads"
-    selector = AdSelector()
+    import redis
+    try:
+        redis_client = redis.Redis(host='localhost', port=6379, db=1, password="TranscoderRedis2024!", decode_responses=True)
+        redis_client.ping()
+    except:
+        redis_client = None
+        
+    selector = AdSelector(redis_client=redis_client)
     verifier = AdVerifier(verbose=False)
     
     existing_ads = {ad['folder_name']: ad for ad in selector.get_all_ads()}

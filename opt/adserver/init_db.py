@@ -2,27 +2,79 @@ import sqlite3
 import os
 import sys
 
-DB_PATH = "/opt/adserver/adserver.db"
-ADS_DIR = "/srv/vod/ads/"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "adserver.db")
+ADS_DIR = os.path.join(BASE_DIR, "../../srv/vod/ads/")
 
 def init_db():
     print(f"[*] Initializing database at {DB_PATH}...")
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
+    # Create advertisers table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS advertisers (
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            name             TEXT UNIQUE NOT NULL,
+            contact_name     TEXT DEFAULT '',
+            contact_email    TEXT DEFAULT '',
+            phone            TEXT DEFAULT '',
+            company          TEXT DEFAULT '',
+            notes            TEXT DEFAULT '',
+            active           INTEGER DEFAULT 1,
+            created_at       TEXT DEFAULT (datetime('now')),
+            updated_at       TEXT DEFAULT (datetime('now'))
+        )
+    """)
+
+    # Create campaigns table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS campaigns (
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            name             TEXT NOT NULL,
+            advertiser_id    INTEGER REFERENCES advertisers(id),
+            description      TEXT DEFAULT '',
+            start_date       TEXT DEFAULT '',
+            end_date         TEXT DEFAULT '',
+            budget_plays     INTEGER DEFAULT 0,
+            target_plays     INTEGER DEFAULT 0,
+            active           INTEGER DEFAULT 1,
+            created_at       TEXT DEFAULT (datetime('now')),
+            updated_at       TEXT DEFAULT (datetime('now')),
+            UNIQUE(name, advertiser_id)
+        )
+    """)
+
     # Create ads table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS ads (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            folder_name TEXT UNIQUE,
-            priority INTEGER DEFAULT 3,
-            placement_pre BOOLEAN DEFAULT 1,
-            placement_mid BOOLEAN DEFAULT 1,
-            placement_post BOOLEAN DEFAULT 1,
-            play_count INTEGER DEFAULT 0,
-            active BOOLEAN DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            folder_name TEXT UNIQUE NOT NULL,
+            ad_description TEXT DEFAULT '',
+            advertiser_name TEXT DEFAULT '',
+            campaign_name TEXT DEFAULT '',
+            priority INTEGER NOT NULL DEFAULT 3,
+            placement_pre INTEGER NOT NULL DEFAULT 1,
+            placement_mid INTEGER NOT NULL DEFAULT 1,
+            placement_post INTEGER NOT NULL DEFAULT 1,
+            play_count INTEGER NOT NULL DEFAULT 0,
+            max_plays INTEGER DEFAULT 0,
+            active INTEGER NOT NULL DEFAULT 1,
+            duration_seconds REAL DEFAULT 0,
+            rendition_count INTEGER DEFAULT 0,
+            tags TEXT DEFAULT '',
+            contact_email TEXT DEFAULT '',
+            start_date TEXT DEFAULT '',
+            end_date TEXT DEFAULT '',
+            budget_plays INTEGER DEFAULT 0,
+            notes TEXT DEFAULT '',
+            input_path TEXT DEFAULT '',
+            status TEXT DEFAULT 'Ready',
+            job_id TEXT,
+            advertiser_id INTEGER REFERENCES advertisers(id),
+            campaign_id INTEGER REFERENCES campaigns(id),
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now'))
         )
     """)
 
@@ -30,12 +82,11 @@ def init_db():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS impressions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            ad_id INTEGER,
-            content_path TEXT,
-            placement TEXT CHECK(placement IN ('pre','mid','post')),
-            session_id TEXT,
-            played_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY(ad_id) REFERENCES ads(id)
+            ad_id INTEGER NOT NULL REFERENCES ads(id),
+            content_path TEXT NOT NULL,
+            placement TEXT NOT NULL CHECK(placement IN ('pre','mid','post')),
+            session_id TEXT NOT NULL,
+            played_at TEXT DEFAULT (datetime('now'))
         )
     """)
 

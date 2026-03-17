@@ -2,99 +2,70 @@
 
 {% block title %}Global Settings{% endblock %}
 
-{% block extra_style %}
-<style>
-    .settings-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 20px;
-    }
-    .form-group {
-        margin-bottom: 20px;
-    }
-    .form-group label {
-        display: block;
-        margin-bottom: 8px;
-        color: var(--text-muted);
-        font-size: 0.9rem;
-    }
-    .form-group input {
-        width: 100%;
-        box-sizing: border-box;
-        padding: 10px;
-        font-size: 1rem;
-    }
-    .help-text {
-        font-size: 0.8rem;
-        color: var(--text-muted);
-        margin-top: 5px;
-    }
-    .save-bar {
-        margin-top: 30px;
-        padding-top: 20px;
-        border-top: 1px solid var(--accent);
-        display: flex;
-        justify-content: flex-end;
-    }
-    #status-msg {
-        margin-right: auto;
-        align-self: center;
-        font-weight: bold;
-    }
-    .success { color: var(--success); }
-    .error { color: var(--highlight); }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="card">
-    <h2>Global Ad Server Settings</h2>
-    <p style="color: var(--text-muted); margin-bottom: 30px;">
-        Configure the behavior of ad stitching across all content.
-    </p>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 mb-0 fw-bold">Global Ad Server Settings</h2>
+        <p class="text-muted small mb-0">Configure the behavior of ad stitching across all content.</p>
+    </div>
+</div>
 
-    <form id="settings-form">
-        <div class="settings-grid">
-            <div class="section">
-                <h3>Timing & Intervals</h3>
-                <div class="form-group">
-                    <label for="mid_roll_interval">Mid-roll Interval (Seconds)</label>
-                    <input type="number" id="mid_roll_interval" name="mid_roll_interval" 
-                           value="{{ settings.mid_roll_interval }}" min="60" step="60">
-                    <p class="help-text">How often to trigger a mid-roll ad break (e.g., 600 = 10 minutes).</p>
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <form id="settings-form">
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="p-3 bg-light rounded-3 h-100">
+                        <h3 class="h6 fw-bold text-uppercase text-muted mb-4"><i class="bi bi-clock me-2"></i>Timing & Intervals</h3>
+                        
+                        <div class="mb-4">
+                            <label for="mid_roll_interval" class="form-label small fw-bold">Mid-roll Interval (Seconds)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="mid_roll_interval" name="mid_roll_interval" 
+                                       value="{{ settings.mid_roll_interval }}" min="60" step="60">
+                                <span class="input-group-text">sec</span>
+                            </div>
+                            <div class="form-text small text-muted">How often to trigger a mid-roll ad break (e.g., 600 = 10 minutes).</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="p-3 bg-light rounded-3 h-100">
+                        <h3 class="h6 fw-bold text-uppercase text-muted mb-4"><i class="bi bi-list-ol me-2"></i>Ad Break Counts</h3>
+                        
+                        <div class="mb-3">
+                            <label for="pre_ad_count" class="form-label small fw-bold">Pre-roll Ad Count</label>
+                            <input type="number" class="form-control" id="pre_ad_count" name="pre_ad_count" 
+                                   value="{{ settings.pre_ad_count }}" min="0" max="5">
+                            <div class="form-text small text-muted">Number of adverts to play before the content starts.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="mid_ad_count" class="form-label small fw-bold">Mid-roll Ad Count</label>
+                            <input type="number" class="form-control" id="mid_ad_count" name="mid_ad_count" 
+                                   value="{{ settings.mid_ad_count }}" min="0" max="5">
+                            <div class="form-text small text-muted">Number of adverts to play during each mid-roll break.</div>
+                        </div>
+
+                        <div class="mb-0">
+                            <label for="post_ad_count" class="form-label small fw-bold">Post-roll Ad Count</label>
+                            <input type="number" class="form-control" id="post_ad_count" name="post_ad_count" 
+                                   value="{{ settings.post_ad_count }}" min="0" max="5">
+                            <div class="form-text small text-muted">Number of adverts to play after the content ends.</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="section">
-                <h3>Ad Break Counts</h3>
-                <div class="form-group">
-                    <label for="pre_ad_count">Pre-roll Ad Count</label>
-                    <input type="number" id="pre_ad_count" name="pre_ad_count" 
-                           value="{{ settings.pre_ad_count }}" min="0" max="5">
-                    <p class="help-text">Number of adverts to play before the content starts.</p>
-                </div>
-
-                <div class="form-group">
-                    <label for="mid_ad_count">Mid-roll Ad Count</label>
-                    <input type="number" id="mid_ad_count" name="mid_ad_count" 
-                           value="{{ settings.mid_ad_count }}" min="0" max="5">
-                    <p class="help-text">Number of adverts to play during each mid-roll break.</p>
-                </div>
-
-                <div class="form-group">
-                    <label for="post_ad_count">Post-roll Ad Count</label>
-                    <input type="number" id="post_ad_count" name="post_ad_count" 
-                           value="{{ settings.post_ad_count }}" min="0" max="5">
-                    <p class="help-text">Number of adverts to play after the content ends.</p>
-                </div>
+            <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
+                <div id="status-msg" class="small fw-bold"></div>
+                <button type="submit" class="btn btn-primary rounded-pill px-5">
+                    <i class="bi bi-check-circle me-2"></i> Save Settings
+                </button>
             </div>
-        </div>
-
-        <div class="save-bar">
-            <span id="status-msg"></span>
-            <button type="submit" class="btn btn-primary">Save Settings</button>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
 {% endblock %}
 
@@ -106,7 +77,7 @@
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         statusMsg.innerText = 'Saving...';
-        statusMsg.className = '';
+        statusMsg.className = 'small fw-bold text-primary';
 
         const formData = new FormData(form);
         const data = {};
@@ -123,16 +94,16 @@
 
             if (resp.ok) {
                 statusMsg.innerText = 'Settings saved successfully!';
-                statusMsg.className = 'success';
+                statusMsg.className = 'small fw-bold text-success';
                 setTimeout(() => { statusMsg.innerText = ''; }, 3000);
             } else {
                 const err = await resp.json();
                 statusMsg.innerText = 'Error: ' + (err.detail || 'Failed to save');
-                statusMsg.className = 'error';
+                statusMsg.className = 'small fw-bold text-danger';
             }
         } catch (err) {
             statusMsg.innerText = 'Network error occurred';
-            statusMsg.className = 'error';
+            statusMsg.className = 'small fw-bold text-danger';
         }
     });
 </script>

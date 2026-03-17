@@ -3,180 +3,293 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AdServer Admin - {% block title %}{% endblock %}</title>
+    <title>📺 Ad Server Admin - {% block title %}{% endblock %}</title>
+    <!-- Bootstrap 5.3.0 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --bg: #1a1a2e;
-            --card: #16213e;
-            --accent: #0f3460;
-            --highlight: #e94560;
-            --text: #e0e0e0;
-            --text-muted: #a0a0a0;
-            --success: #4caf50;
-            --info: #2196f3;
-            --warning: #ff9800;
+            --primary-dark: #1a1a1a;
+            --accent-green: #00ff88;
+            --accent-blue: #00d4ff;
+            --body-bg: #f4f7f6;
+            --card-bg: #ffffff;
+            --font-sans: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
         }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding-top: 60px;
+            font-family: var(--font-sans);
+            background-color: var(--body-bg);
+            color: var(--primary-dark);
+            padding-top: 70px;
         }
+
         .navbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            background-color: var(--card);
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-            z-index: 1000;
+            background-color: var(--primary-dark) !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            height: 70px;
         }
+
         .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--highlight);
-            text-decoration: none;
-            margin-right: 40px;
+            font-weight: 700;
+            color: var(--accent-green) !important;
+            letter-spacing: -0.5px;
         }
-        .navbar-nav {
-            display: flex;
-            gap: 20px;
-            flex-grow: 1;
-        }
+
         .nav-link {
-            color: var(--text);
-            text-decoration: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            transition: background 0.3s;
+            color: rgba(255,255,255,0.8) !important;
+            font-weight: 500;
+            padding: 0.5rem 1rem !important;
+            transition: all 0.2s;
         }
+
         .nav-link:hover, .nav-link.active {
-            background-color: var(--accent);
+            color: var(--accent-green) !important;
         }
-        .navbar-info {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            text-align: right;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 0 20px;
-        }
+
         .card {
-            background-color: var(--card);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-        h2 {
-            margin-top: 0;
-            color: var(--highlight);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--accent);
-        }
-        th {
-            color: var(--text-muted);
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 1px;
-        }
-        .btn {
-            padding: 8px 16px;
-            border-radius: 4px;
             border: none;
-            cursor: pointer;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            background-color: var(--card-bg);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 1.25rem 1.5rem;
             font-weight: 600;
-            transition: opacity 0.3s;
         }
-        .btn:hover {
-            opacity: 0.8;
+
+        .card-active-job {
+            background-color: var(--primary-dark);
+            color: white;
+            border-left: 5px solid var(--accent-green);
         }
-        .btn-primary { background-color: var(--highlight); color: white; }
-        .btn-secondary { background-color: var(--accent); color: white; }
-        .btn-danger { background-color: #f44336; color: white; }
-        
-        input[type="text"], input[type="number"], select {
-            background-color: var(--bg);
-            border: 1px solid var(--accent);
-            color: var(--text);
-            padding: 5px;
-            border-radius: 4px;
+
+        .status-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
         }
-        
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
-            align-items: center; justify-content: center;
-            z-index: 2000;
+
+        .status-active {
+            background-color: var(--accent-green);
+            box-shadow: 0 0 8px var(--accent-green);
         }
-        .modal-content {
-            background: var(--card);
-            padding: 30px;
+
+        .status-paused {
+            background-color: #ffcc00;
+            box-shadow: 0 0 8px #ffcc00;
+        }
+
+        .status-error {
+            background-color: #ff4444;
+            box-shadow: 0 0 8px #ff4444;
+        }
+
+        .progress {
+            height: 10px;
+            border-radius: 5px;
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        .progress-bar {
+            background-color: var(--accent-green);
+            border-radius: 5px;
+        }
+
+        .font-mono {
+            font-family: var(--font-mono);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-green);
+            border-color: var(--accent-green);
+            color: var(--primary-dark);
+            font-weight: 600;
             border-radius: 8px;
-            max-width: 400px;
-            text-align: center;
+        }
+
+        .btn-primary:hover {
+            background-color: #00e67a;
+            border-color: #00e67a;
+            color: var(--primary-dark);
+        }
+
+        .btn-outline-primary {
+            color: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--accent-green);
+            border-color: var(--accent-green);
+            color: var(--primary-dark);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--body-bg); }
+        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #bbb; }
+
+        #toast-container {
+            position: fixed;
+            top: 85px;
+            right: 20px;
+            z-index: 1060;
         }
     </style>
-    {% block extra_style %}{% endblock %}
+    {% block styles %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar">
-        <a href="/" class="navbar-brand">AdServer Admin</a>
-        <div class="navbar-nav">
-            <a href="/ads" class="nav-link {% if active_page == 'ads' %}active{% endif %}">Ads Management</a>
-            <a href="/metrics" class="nav-link {% if active_page == 'metrics' %}active{% endif %}">Metrics</a>
-            <a href="/activity" class="nav-link {% if active_page == 'activity' %}active{% endif %}">Live Activity</a>
-            <a href="/settings" class="nav-link {% if active_page == 'settings' %}active{% endif %}">Settings</a>
-        </div>
-        <div class="navbar-info">
-            <div>Server Time: <span id="server-time">{{ server_time }}</span></div>
-            <div>DB Size: {{ db_size }}</div>
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <i class="bi bi-broadcast-pin me-2"></i>
+                AD SERVER ADMIN
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page == 'ads' %}active{% endif %}" href="/ads">
+                            <i class="bi bi-collection-play me-1"></i> Ads
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page == 'metrics' %}active{% endif %}" href="/metrics">
+                            <i class="bi bi-graph-up me-1"></i> Metrics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page == 'activity' %}active{% endif %}" href="/activity">
+                            <i class="bi bi-activity me-1"></i> Activity
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page == 'settings' %}active{% endif %}" href="/settings">
+                            <i class="bi bi-gear me-1"></i> Settings
+                        </a>
+                    </li>
+                </ul>
+                <div class="navbar-text text-white-50 d-none d-lg-block">
+                    <span id="nav-stats" class="me-3 font-mono small">
+                        {{ status.active_ads }} active | {{ status.impressions_today }} plays today
+                    </span>
+                    <span id="nav-clock" class="font-mono small">00:00:00</span>
+                </div>
+            </div>
         </div>
     </nav>
 
-    <div class="container">
-        {% block content %}{% endblock %}
-    </div>
+    <div id="toast-container"></div>
 
-    <div id="confirmModal" class="modal">
-        <div class="modal-content">
-            <h3>Confirm Delete</h3>
-            <p>Are you sure you want to delete this ad?</p>
-            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
-                <button id="confirmDeleteBtn" class="btn btn-danger">Delete</button>
-                <button onclick="closeModal()" class="btn btn-secondary">Cancel</button>
+    <main class="container-fluid px-4 py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold" id="modalTitle">Confirm Action</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body py-3" id="modalBody">
+                    Are you sure you want to proceed?
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="modalConfirmBtn" class="btn btn-primary rounded-pill px-4">Confirm</button>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
-        function closeModal() {
-            document.getElementById('confirmModal').style.display = 'none';
+        const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+
+        function showFlash(msg, type='success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0 show mb-2`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                        ${msg}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                const bsToast = new bootstrap.Toast(toast);
+                bsToast.hide();
+                setTimeout(() => toast.remove(), 500);
+            }, 5000);
         }
-        
-        // Update time every second
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('server-time').innerText = now.toISOString().replace('T', ' ').split('.')[0];
-        }, 1000);
+
+        function storeFlash(msg, type) {
+            sessionStorage.setItem('flash_msg', msg);
+            sessionStorage.setItem('flash_type', type);
+        }
+
+        window.addEventListener('load', () => {
+            const msg = sessionStorage.getItem('flash_msg');
+            if (msg) {
+                showFlash(msg, sessionStorage.getItem('flash_type'));
+                sessionStorage.removeItem('flash_msg');
+                sessionStorage.removeItem('flash_type');
+            }
+        });
+
+        function openModal(title, body, onConfirm) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalBody').textContent = body;
+            const btn = document.getElementById('modalConfirmBtn');
+            btn.onclick = () => { onConfirm(); confirmModal.hide(); };
+            confirmModal.show();
+        }
+
+        function updateClock() {
+            const el = document.getElementById('nav-clock');
+            if (el) el.textContent = new Date().toLocaleTimeString();
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        async function updateNavStats() {
+            try {
+                const r = await fetch('/api/status');
+                const d = await r.json();
+                document.getElementById('nav-stats').textContent =
+                    `${d.active_ads} active | ${d.impressions_today} plays today`;
+            } catch(e) {}
+        }
+        setInterval(updateNavStats, 60000);
     </script>
     {% block scripts %}{% endblock %}
 </body>
